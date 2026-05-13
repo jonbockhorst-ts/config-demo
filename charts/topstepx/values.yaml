@@ -45,37 +45,79 @@ secrets:
     remoteNamespace: eso-seed
     tokenSecretName: eso-kubernetes-store-token
     tokenSecretKey: token
-  ConnectionStrings:
-    Topstep:
+  template:
+    ConnectionStrings:
+      Topstep: "Username={{ .topstepUsername }};Password={{ .topstepPassword }};Host={{ .topstepHost }};Database=dev;Port={{ .topstepPort }};Include Error Detail=true"
+      TopstepReadOnly: "Username={{ .topstepReadOnlyUsername }};Password={{ .topstepReadOnlyPassword }};Host={{ .topstepReadOnlyHost }};Database=dev;Port={{ .topstepReadOnlyPort }};Include Error Detail=true"
+      Chart: "Username={{ .chartUsername }};Password={{ .chartPassword }};Host={{ .chartHost }};Database=cqg-contract-bars;Port={{ .chartPort }};Command Timeout=900"
+    Jwt:
+      Secret: "{{ .jwtSecret }}"
+    Temporal:
+      ApiKey: "{{ .temporalApiKey }}"
+    MarketDataApi:
+      ApiKey: "{{ .marketDataApiKey }}"
+    Strapi:
+      Token: "{{ .strapiToken }}"
+    Stripe:
+      ApiKey: "{{ .stripeApiKey }}"
+    ElasticSearch:
+      Password: "{{ .elasticSearchPassword }}"
+      CloudApiKey: "{{ .elasticSearchCloudApiKey }}"
+  vars:
+    topstepHost:
       remoteKey: databases-postgres-demo
-      database: dev
-      includeErrorDetail: true
-    TopstepReadOnly:
-      remoteKey: databases-postgres-demo-readonly
-      database: dev
-      includeErrorDetail: true
-    Chart:
-      remoteKey: databases-chart-demo
-      database: cqg-contract-bars
-      commandTimeout: 900
-  Jwt:
-    remoteKey: auth-jwt-demo
-    Secret: { property: secret }
-  Temporal:
-    remoteKey: temporal-demo
-    ApiKey: { property: apiKey }
-  MarketDataApi:
-    remoteKey: api-marketdata-demo
-    ApiKey: { property: apiKey }
-  Strapi:
-    remoteKey: api-strapi-demo
-    Token: { property: token }
-  Stripe:
-    remoteKey: api-stripe-demo
-    ApiKey: { property: apiKey }
-  ElasticSearch:
-    remoteKey: elasticsearch-demo
-    Password:
+      property: host
+    topstepPort:
+      remoteKey: databases-postgres-demo
+      property: port
+    topstepUsername:
+      remoteKey: databases-postgres-demo
+      property: username
+    topstepPassword:
+      remoteKey: databases-postgres-demo
       property: password
-    CloudApiKey:
+    topstepReadOnlyHost:
+      remoteKey: databases-postgres-demo-readonly
+      property: host
+    topstepReadOnlyPort:
+      remoteKey: databases-postgres-demo-readonly
+      property: port
+    topstepReadOnlyUsername:
+      remoteKey: databases-postgres-demo-readonly
+      property: username
+    topstepReadOnlyPassword:
+      remoteKey: databases-postgres-demo-readonly
+      property: password
+    chartHost:
+      remoteKey: databases-chart-demo
+      property: host
+    chartPort:
+      remoteKey: databases-chart-demo
+      property: port
+    chartUsername:
+      remoteKey: databases-chart-demo
+      property: username
+    chartPassword:
+      remoteKey: databases-chart-demo
+      property: password
+    jwtSecret:
+      remoteKey: auth-jwt-demo
+      property: secret
+    temporalApiKey:
+      remoteKey: temporal-demo
+      property: apiKey
+    marketDataApiKey:
+      remoteKey: api-marketdata-demo
+      property: apiKey
+    strapiToken:
+      remoteKey: api-strapi-demo
+      property: token
+    stripeApiKey:
+      remoteKey: api-stripe-demo
+      property: apiKey
+    elasticSearchPassword:
+      remoteKey: elasticsearch-demo
+      property: password
+    elasticSearchCloudApiKey:
+      remoteKey: elasticsearch-demo
       property: cloudApiKey

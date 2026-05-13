@@ -19,30 +19,47 @@ topstepx:
       remoteNamespace: eso-seed
       tokenSecretName: eso-kubernetes-store-token
       tokenSecretKey: token
-    ConnectionStrings:
-      Topstep:
+    template:
+      ConnectionStrings:
+        Topstep: "Username={{ .topstepUsername }};Password={{ .topstepPassword }};Host={{ .topstepHost }};Database=demo;Port={{ .topstepPort }};Include Error Detail=true"
+        TopstepReadOnly: "Username={{ .topstepReadOnlyUsername }};Password={{ .topstepReadOnlyPassword }};Host={{ .topstepReadOnlyHost }};Database=demo;Port={{ .topstepReadOnlyPort }};Include Error Detail=true"
+        Chart: "Username={{ .chartUsername }};Password={{ .chartPassword }};Host={{ .chartHost }};Database=cqg-contract-bars-demo;Port={{ .chartPort }};Command Timeout=900"
+    vars:
+      topstepHost:
         remoteKey: databases-postgres-demo
-        database: demo
-      TopstepReadOnly:
+      topstepPort:
+        remoteKey: databases-postgres-demo
+      topstepUsername:
+        remoteKey: databases-postgres-demo
+      topstepPassword:
+        remoteKey: databases-postgres-demo
+      topstepReadOnlyHost:
         remoteKey: databases-postgres-demo-readonly
-        database: demo
-      Chart:
+      topstepReadOnlyPort:
+        remoteKey: databases-postgres-demo-readonly
+      topstepReadOnlyUsername:
+        remoteKey: databases-postgres-demo-readonly
+      topstepReadOnlyPassword:
+        remoteKey: databases-postgres-demo-readonly
+      chartHost:
         remoteKey: databases-chart-demo
-        database: cqg-contract-bars-demo
-    Jwt:
-      remoteKey: auth-jwt-demo
-      Secret: { property: secret }
-    Temporal:
-      remoteKey: temporal-demo
-      ApiKey: { property: apiKey }
-    MarketDataApi:
-      remoteKey: api-marketdata-demo
-      ApiKey: { property: apiKey }
-    Strapi:
-      remoteKey: api-strapi-demo
-      Token: { property: token }
-    Stripe:
-      remoteKey: api-stripe-demo
-      ApiKey: { property: apiKey }
-    ElasticSearch:
-      remoteKey: elasticsearch-demo
+      chartPort:
+        remoteKey: databases-chart-demo
+      chartUsername:
+        remoteKey: databases-chart-demo
+      chartPassword:
+        remoteKey: databases-chart-demo
+      jwtSecret:
+        remoteKey: auth-jwt-demo
+      temporalApiKey:
+        remoteKey: temporal-demo
+      marketDataApiKey:
+        remoteKey: api-marketdata-demo
+      strapiToken:
+        remoteKey: api-strapi-demo
+      stripeApiKey:
+        remoteKey: api-stripe-demo
+      elasticSearchPassword:
+        remoteKey: elasticsearch-demo
+      elasticSearchCloudApiKey:
+        remoteKey: elasticsearch-demo

@@ -25,30 +25,47 @@ topstepx:
       remoteNamespace: eso-seed
       tokenSecretName: eso-kubernetes-store-token
       tokenSecretKey: token
-    ConnectionStrings:
-      Topstep:
+    template:
+      ConnectionStrings:
+        Topstep: "Username={{ .topstepUsername }};Password={{ .topstepPassword }};Host={{ .topstepHost }};Database=demo_override;Port={{ .topstepPort }};Include Error Detail=true"
+        TopstepReadOnly: "Username={{ .topstepReadOnlyUsername }};Password={{ .topstepReadOnlyPassword }};Host={{ .topstepReadOnlyHost }};Database=demo_override;Port={{ .topstepReadOnlyPort }};Include Error Detail=true"
+        Chart: "Username={{ .chartUsername }};Password={{ .chartPassword }};Host={{ .chartHost }};Database=cqg-contract-bars-demo-override;Port={{ .chartPort }};Command Timeout=900"
+    vars:
+      topstepHost:
         remoteKey: databases-postgres-demo-override
-        database: demo_override
-      TopstepReadOnly:
+      topstepPort:
+        remoteKey: databases-postgres-demo-override
+      topstepUsername:
+        remoteKey: databases-postgres-demo-override
+      topstepPassword:
+        remoteKey: databases-postgres-demo-override
+      topstepReadOnlyHost:
         remoteKey: databases-postgres-demo-override-readonly
-        database: demo_override
-      Chart:
+      topstepReadOnlyPort:
+        remoteKey: databases-postgres-demo-override-readonly
+      topstepReadOnlyUsername:
+        remoteKey: databases-postgres-demo-override-readonly
+      topstepReadOnlyPassword:
+        remoteKey: databases-postgres-demo-override-readonly
+      chartHost:
         remoteKey: databases-chart-demo-override
-        database: cqg-contract-bars-demo-override
-    Jwt:
-      remoteKey: auth-jwt-demo-override
-      Secret: { property: secret }
-    Temporal:
-      remoteKey: temporal-demo-override
-      ApiKey: { property: apiKey }
-    MarketDataApi:
-      remoteKey: api-marketdata-demo-override
-      ApiKey: { property: apiKey }
-    Strapi:
-      remoteKey: api-strapi-demo-override
-      Token: { property: token }
-    Stripe:
-      remoteKey: api-stripe-demo-override
-      ApiKey: { property: apiKey }
-    ElasticSearch:
-      remoteKey: elasticsearch-demo-override
+      chartPort:
+        remoteKey: databases-chart-demo-override
+      chartUsername:
+        remoteKey: databases-chart-demo-override
+      chartPassword:
+        remoteKey: databases-chart-demo-override
+      jwtSecret:
+        remoteKey: auth-jwt-demo-override
+      temporalApiKey:
+        remoteKey: temporal-demo-override
+      marketDataApiKey:
+        remoteKey: api-marketdata-demo-override
+      strapiToken:
+        remoteKey: api-strapi-demo-override
+      stripeApiKey:
+        remoteKey: api-stripe-demo-override
+      elasticSearchPassword:
+        remoteKey: elasticsearch-demo-override
+      elasticSearchCloudApiKey:
+        remoteKey: elasticsearch-demo-override
