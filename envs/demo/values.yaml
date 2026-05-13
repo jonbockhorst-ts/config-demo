@@ -46,3 +46,5 @@ topstepx:
       ApiKey: { property: apiKey }
     ElasticSearch:
       remoteKey: elasticsearch-demo
+    GatewayApi:
+      remoteKey: gateway-api-demo

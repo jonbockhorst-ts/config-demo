@@ -12,6 +12,7 @@ The prototype proves:
 - fixed file paths replace env-suffixed mounted config files
 - no chart feature flags are required for the steady-state file model
 - mixed sections like `Temporal`, `MarketDataApi`, and `Strapi` can be split cleanly between non-secret and secret fields
+- nested mixed sections like `GatewayApi.AllowedApplications.<id>` can merge non-secret names and secret keys from separate files
 
 ## Local demo shape
 
@@ -141,6 +142,11 @@ and a section like `ElasticSearch` can share one secret source for multiple secr
 - `secrets.ElasticSearch.Password.property`
 - `secrets.ElasticSearch.CloudApiKey.property`
 
+The demo now also proves a nested merge case that looks much closer to real `GatewayApi` config:
+
+- `appsettings.GatewayApi.AllowedApplications.<app-id>.Name`
+- `secrets.GatewayApi.AllowedApplications.<app-id>.SecretKey`
+
 The `demo` environment does not set `HedgeDetection.ImmediateEnforcementThreshold` in Helm values, so the app keeps the base value `8`.
 
 The `demo-override` environment sets this in [envs/demo-override/values.yaml](/Users/jonbockhorst/dev/config-demo/envs/demo-override/values.yaml:1):
@@ -181,6 +187,13 @@ secrets:
       property: password
     CloudApiKey:
       property: cloudApiKey
+  GatewayApi:
+    remoteKey: /gateway/apps/dev
+    AllowedApplications:
+      FE29F223-1FD6-49FE-9FF1-AE03F219F90B:
+        SecretKey: { property: sim2FundedSecretKey }
+      B76015F2-04D3-477E-9191-C5E22CB2C957:
+        SecretKey: { property: quantowerSecretKey }
 ```
 
 In the local demo, those `remoteKey` values point to Kubernetes Secrets in `eso-seed`, but the structure is meant to map directly to AWS Secrets Manager later.

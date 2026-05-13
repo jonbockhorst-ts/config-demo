@@ -115,6 +115,16 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
+  name: gateway-api-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  sim2FundedSecretKey: gateway-demo-sim2funded-secret
+  quantowerSecretKey: gateway-demo-quantower-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
   name: databases-postgres-demo-override
   namespace: eso-seed
 type: Opaque
@@ -202,6 +212,16 @@ type: Opaque
 stringData:
   password: elasticsearch-demo-override-password
   cloudApiKey: elasticsearch-demo-override-cloud-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gateway-api-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  sim2FundedSecretKey: gateway-demo-override-sim2funded-secret
+  quantowerSecretKey: gateway-demo-override-quantower-secret
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -13,7 +13,7 @@ var app = builder.Build();
 
 var startupSnapshot = BuildSnapshot(app.Configuration);
 app.Logger.LogInformation(
-    "Config summary: Topstep={Topstep}, TopstepReadOnly={TopstepReadOnly}, Chart={Chart}, Jwt={Jwt}, TemporalNamespace={TemporalNamespace}, TemporalApiKey={TemporalApiKey}, MarketDataApiBaseUrl={MarketDataApiBaseUrl}, MarketDataApiKey={MarketDataApiKey}, StrapiBaseUrl={StrapiBaseUrl}, StrapiToken={StrapiToken}, StripeApiKey={StripeApiKey}, ElasticSearchUrl={ElasticSearchUrl}, ElasticSearchPassword={ElasticSearchPassword}, ElasticSearchCloudApiKey={ElasticSearchCloudApiKey}, DefaultLogLevel={DefaultLogLevel}, AllowAnonymousRegistration={AllowAnonymousRegistration}, EnableHubspotEmails={EnableHubspotEmails}, ImmediateEnforcementThreshold={ImmediateEnforcementThreshold}",
+    "Config summary: Topstep={Topstep}, TopstepReadOnly={TopstepReadOnly}, Chart={Chart}, Jwt={Jwt}, TemporalNamespace={TemporalNamespace}, TemporalApiKey={TemporalApiKey}, MarketDataApiBaseUrl={MarketDataApiBaseUrl}, MarketDataApiKey={MarketDataApiKey}, StrapiBaseUrl={StrapiBaseUrl}, StrapiToken={StrapiToken}, StripeApiKey={StripeApiKey}, ElasticSearchUrl={ElasticSearchUrl}, ElasticSearchPassword={ElasticSearchPassword}, ElasticSearchCloudApiKey={ElasticSearchCloudApiKey}, GatewayApiSim2FundedName={GatewayApiSim2FundedName}, GatewayApiSim2FundedSecret={GatewayApiSim2FundedSecret}, GatewayApiQuantowerName={GatewayApiQuantowerName}, GatewayApiQuantowerSecret={GatewayApiQuantowerSecret}, DefaultLogLevel={DefaultLogLevel}, AllowAnonymousRegistration={AllowAnonymousRegistration}, EnableHubspotEmails={EnableHubspotEmails}, ImmediateEnforcementThreshold={ImmediateEnforcementThreshold}",
     startupSnapshot.TopstepConnectionPresent ? "present" : "missing",
     startupSnapshot.TopstepReadOnlyConnectionPresent ? "present" : "missing",
     startupSnapshot.ChartConnectionPresent ? "present" : "missing",
@@ -28,6 +28,10 @@ app.Logger.LogInformation(
     startupSnapshot.ElasticSearchUrl ?? "missing",
     startupSnapshot.ElasticSearchPasswordPresent ? "present" : "missing",
     startupSnapshot.ElasticSearchCloudApiKeyPresent ? "present" : "missing",
+    startupSnapshot.GatewayApiSim2FundedName ?? "missing",
+    startupSnapshot.GatewayApiSim2FundedSecretPresent ? "present" : "missing",
+    startupSnapshot.GatewayApiQuantowerName ?? "missing",
+    startupSnapshot.GatewayApiQuantowerSecretPresent ? "present" : "missing",
     startupSnapshot.DefaultLogLevel ?? "missing",
     startupSnapshot.AllowAnonymousRegistration,
     startupSnapshot.EnableHubspotEmails,
@@ -51,6 +55,8 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
     var stripeApiKey = configuration["Stripe:ApiKey"];
     var elasticSearchPassword = configuration["ElasticSearch:Password"];
     var elasticSearchCloudApiKey = configuration["ElasticSearch:CloudApiKey"];
+    var sim2FundedSecretKey = configuration["GatewayApi:AllowedApplications:FE29F223-1FD6-49FE-9FF1-AE03F219F90B:SecretKey"];
+    var quantowerSecretKey = configuration["GatewayApi:AllowedApplications:B76015F2-04D3-477E-9191-C5E22CB2C957:SecretKey"];
 
     return new ConfigSnapshot(
         TopstepConnectionPresent: !string.IsNullOrWhiteSpace(topstepConnection),
@@ -71,6 +77,10 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
         ElasticSearchUrl: configuration["ElasticSearch:Url"],
         ElasticSearchPasswordPresent: !string.IsNullOrWhiteSpace(elasticSearchPassword),
         ElasticSearchCloudApiKeyPresent: !string.IsNullOrWhiteSpace(elasticSearchCloudApiKey),
+        GatewayApiSim2FundedName: configuration["GatewayApi:AllowedApplications:FE29F223-1FD6-49FE-9FF1-AE03F219F90B:Name"],
+        GatewayApiSim2FundedSecretPresent: !string.IsNullOrWhiteSpace(sim2FundedSecretKey),
+        GatewayApiQuantowerName: configuration["GatewayApi:AllowedApplications:B76015F2-04D3-477E-9191-C5E22CB2C957:Name"],
+        GatewayApiQuantowerSecretPresent: !string.IsNullOrWhiteSpace(quantowerSecretKey),
         DefaultLogLevel: configuration["Logging:LogLevel:Default"],
         AllowAnonymousRegistration: configuration.GetValue<bool?>("FeatureFlags:AllowAnonymousRegistration"),
         EnableHubspotEmails: configuration.GetValue<bool?>("FeatureFlags:EnableHubspotEmails"),
@@ -116,6 +126,10 @@ internal sealed record ConfigSnapshot(
     string? ElasticSearchUrl,
     bool ElasticSearchPasswordPresent,
     bool ElasticSearchCloudApiKeyPresent,
+    string? GatewayApiSim2FundedName,
+    bool GatewayApiSim2FundedSecretPresent,
+    string? GatewayApiQuantowerName,
+    bool GatewayApiQuantowerSecretPresent,
     string? DefaultLogLevel,
     bool? AllowAnonymousRegistration,
     bool? EnableHubspotEmails,

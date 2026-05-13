@@ -52,3 +52,5 @@ topstepx:
       ApiKey: { property: apiKey }
     ElasticSearch:
       remoteKey: elasticsearch-demo-override
+    GatewayApi:
+      remoteKey: gateway-api-demo-override

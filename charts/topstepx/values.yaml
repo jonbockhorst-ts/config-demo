@@ -33,6 +33,13 @@ appsettings:
     Url: https://elastic.local/
     Username: elastic
     CloudId: topstepx-demo:ZXMtdXM...==
+  GatewayApi:
+    UserActivityLogQueueName: activitylogs-demo
+    AllowedApplications:
+      FE29F223-1FD6-49FE-9FF1-AE03F219F90B:
+        Name: Sim2Funded
+      B76015F2-04D3-477E-9191-C5E22CB2C957:
+        Name: Quantower
   Temporal:
     Address: topstepx-dev.tmprl.cloud:7233
     Namespace: topstepx-dev
@@ -75,7 +82,12 @@ secrets:
     ApiKey: { property: apiKey }
   ElasticSearch:
     remoteKey: elasticsearch-demo
-    Password:
-      property: password
-    CloudApiKey:
-      property: cloudApiKey
+    Password: { property: password }
+    CloudApiKey: { property: cloudApiKey }
+  GatewayApi:
+    remoteKey: gateway-api-demo
+    AllowedApplications:
+      FE29F223-1FD6-49FE-9FF1-AE03F219F90B:
+        SecretKey: { property: sim2FundedSecretKey }
+      B76015F2-04D3-477E-9191-C5E22CB2C957:
+        SecretKey: { property: quantowerSecretKey }
