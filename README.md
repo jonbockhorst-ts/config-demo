@@ -8,8 +8,15 @@ Every variant produces the same Kubernetes outputs: a `ConfigMap` for
 non-secret config and an ESO-managed `Secret` for resolved secrets. The app
 loads them in the same order. The variants differ in where the schema lives,
 who composes connection strings, and how much the chart template iterates
-over values vs. enumerates by hand. Compare the variants, then pick one to
-apply to the production charts.
+over values vs. enumerates by hand.
+
+At this point, the prototype has effectively narrowed to two serious options:
+
+- `main` — strict chart-owned schema, string connection strings composed in Helm
+- `split-connection-strings` — strict chart-owned schema, structured connection strings composed by .NET
+
+The other two branches are still useful as contrast, but they are mostly
+documented here as ruled-out alternatives.
 
 ## Consistent across branches
 
@@ -18,7 +25,7 @@ apply to the production charts.
 - The app doesn't call AWS Secrets Manager directly.
 - Mount paths are fixed: `/app/appsettings.global.json` and `/app/secrets`. No env-suffixed filenames.
 - `config.useConfigMap` is available as a temporary rollout toggle.
-- Shared chart defaults now express `remoteKey` values as AWS-style secret paths. Local-only env charts adapt those paths to the Kubernetes-provider seed data used by the demo bootstrap.
+- Shared chart defaults express `remoteKey` values as AWS-style secret paths. The local demo bootstrap injects a temporary override so the Kubernetes provider can read seeded local Secret names.
 - Resource-shaped Secrets Manager secrets (`/databases/postgres/dev`, `/auth/jwt/dev`, …). Multiple bindings can share one source.
 - Runtime config layering:
   1. `/app/appsettings.json` — per-service base, baked into the image
@@ -30,7 +37,7 @@ Sections like `Temporal`, `MarketDataApi`, and `ElasticSearch` mix non-secret
 fields (`Address`, `BaseUrl`, `Url`) with secret fields (`ApiKey`, `Token`,
 `Password`). See [Realistic split example](#realistic-split-example).
 
-## The four approaches
+## Preferred approaches
 
 | Axis                          | `main`                | `chart-template`             | `data-driven-template`       | `split-connection-strings`     |
 |-------------------------------|-----------------------|------------------------------|------------------------------|--------------------------------|
@@ -56,6 +63,31 @@ layout and carries templated `remoteKey` values plus per-binding parameters.
   entries and the `data:` list) that can drift inside the chart. Postgres
   connection-string syntax lives in Helm.
 
+- **Current position:** Preferred baseline. This is the simplest strict
+  approach and best preserves the current app contract.
+
+### `split-connection-strings` — driver-built connection strings
+
+The schema enumeration matches `main`, but `ConnectionStrings.*` come
+through as structured objects (`{Host, Port, Username, Password, Database}`)
+in the secret config instead of composed strings. The app binds each section
+into a named `NpgsqlConnectionStringBuilder` with `ValidateOnStart` for
+`Host`, `Username`, `Password`, and `Database`. Non-secret tuning
+(`IncludeErrorDetail`, `CommandTimeout`, pool sizes) moves to
+`appsettings.ConnectionStrings.<Name>` and merges into the same section
+before the builder reads it.
+
+- **Pros:** The chart doesn't know Postgres connection-string syntax.
+  Non-secret tuning lives in `appsettings:` with the rest of the non-secret
+  config. Startup validation catches missing required fields with named
+  errors.
+- **Cons:** The app depends on `Npgsql` (or one builder per driver flavor).
+  Each new driver family needs its own options binding.
+- **Current position:** Preferred advanced option. Stronger runtime contract,
+  but it asks the app to own more of the connection-string composition model.
+
+## Other approaches considered
+
 ### `chart-template` — schema in values
 
 The external secret template is effectively two lines: `toPrettyJson` on
@@ -70,6 +102,8 @@ is a flat map from `secretKey` to `{remoteKey, property}`.
   declare a binding the app doesn't read, or omit one it does.
   Connection-string syntax inside a YAML string is hard to review.
   `secrets.template` and `secrets.vars` stay in sync by convention only.
+- **Why it fell behind:** Too much schema flexibility at the env layer, and
+  two sources of truth inside the same values model.
 
 ### `data-driven-template` — recursive values walk
 
@@ -89,36 +123,18 @@ still composes it in Helm.
   walk the recursion to know what JSON comes out. The schema-in-values
   weakness is the same as `chart-template`. `ConnectionStrings` doesn't fit
   the walk, so the chart still hand-writes that section.
-
-### `split-connection-strings` — driver-built connection strings
-
-The schema enumeration matches `main`, but `ConnectionStrings.*` come
-through as structured objects (`{Host, Port, Username, Password, Database}`)
-in the secret JSON instead of composed strings. The app binds each section
-into a named `NpgsqlConnectionStringBuilder` with `ValidateOnStart` for
-`Host`, `Username`, `Password`, and `Database`. Non-secret tuning
-(`IncludeErrorDetail`, `CommandTimeout`, pool sizes) moves to
-`appsettings.ConnectionStrings.<Name>` and merges into the same section
-before the builder reads it.
-
-- **Pros:** The chart doesn't know Postgres connection-string syntax.
-  Non-secret tuning lives in `appsettings:` with the rest of the non-secret
-  config. Startup validation catches missing required fields with named
-  errors.
-- **Cons:** The app depends on `Npgsql` (or one builder per driver flavor).
-  Each new driver family needs its own options binding.
+- **Why it fell behind:** Too clever for a shared config system that people
+  will need to debug quickly under pressure.
 
 ### Open questions
 
 Two decisions, mostly independent:
 
-- **Where does the schema live?** Chart (`main`, `split-connection-strings`)
-  keeps the schema next to the consuming code and prevents values files
-  from inventing bindings. Values (`chart-template`, `data-driven-template`)
-  makes the schema a values change in the ops repo.
-- **Where does connection-string syntax live?** A Helm template (`main`,
-  `data-driven-template`), a YAML string value (`chart-template`), or the
-  .NET driver (`split-connection-strings`).
+- **Where does the schema live?** The prototype outcome strongly favors the
+  chart (`main`, `split-connection-strings`), which keeps the schema next to
+  the consuming code and prevents values files from inventing bindings.
+- **Where does connection-string syntax live?** A Helm template (`main`) or
+  the .NET driver (`split-connection-strings`).
 
 
 ## Repository layout
