@@ -8,7 +8,7 @@ builder.Configuration.Sources.Clear();
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false)
     .AddJsonFile("appsettings.global.json", optional: true)
-    .AddJsonFile("secrets/appsettings.secrets.json", optional: true)
+    .AddKeyPerFile(directoryPath: "/app/secrets", optional: true, reloadOnChange: false)
     .AddEnvironmentVariables();
 
 foreach (var name in new[] { "Topstep", "TopstepReadOnly", "Chart" })

@@ -3,6 +3,7 @@ topstepx:
 
   config:
     secretStoreName: kubernetes-seed
+    secretsEnv: demo
 
   image:
     repository: eso-config-demo
@@ -14,35 +15,10 @@ topstepx:
       EnvironmentName: demo
 
   secrets:
-    refreshInterval: 1m
-    store:
-      remoteNamespace: eso-seed
-      tokenSecretName: eso-kubernetes-store-token
-      tokenSecretKey: token
     ConnectionStrings:
       Topstep:
-        remoteKey: databases-postgres-demo
         database: demo
       TopstepReadOnly:
-        remoteKey: databases-postgres-demo-readonly
         database: demo
       Chart:
-        remoteKey: databases-chart-demo
         database: cqg-contract-bars-demo
-    Jwt:
-      remoteKey: auth-jwt-demo
-      Secret: { property: secret }
-    Temporal:
-      remoteKey: temporal-demo
-      ApiKey: { property: apiKey }
-    MarketDataApi:
-      remoteKey: api-marketdata-demo
-      ApiKey: { property: apiKey }
-    Strapi:
-      remoteKey: api-strapi-demo
-      Token: { property: token }
-    Stripe:
-      remoteKey: api-stripe-demo
-      ApiKey: { property: apiKey }
-    ElasticSearch:
-      remoteKey: elasticsearch-demo

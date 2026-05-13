@@ -16,7 +16,9 @@ spec:
         app.kubernetes.io/name: {{ include "topstepx.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
+        {{- if .Values.config.useConfigMap }}
         checksum/appsettings-global: {{ include (print $.Template.BasePath "/configmap-appsettings-global.yaml") . | sha256sum }}
+        {{- end }}
         checksum/appsettings-secrets-template: {{ include (print $.Template.BasePath "/externalsecret-appsettings-secrets.yaml") . | sha256sum }}
     spec:
       containers:
@@ -32,17 +34,21 @@ spec:
             - containerPort: {{ .Values.service.targetPort }}
               name: http
           volumeMounts:
+            {{- if .Values.config.useConfigMap }}
             - name: appsettings-global
               mountPath: /app/appsettings.global.json
               subPath: appsettings.global.json
               readOnly: true
+            {{- end }}
             - name: appsettings-secrets
               mountPath: /app/secrets
               readOnly: true
       volumes:
+        {{- if .Values.config.useConfigMap }}
         - name: appsettings-global
           configMap:
             name: appsettings-global
+        {{- end }}
         - name: appsettings-secrets
           secret:
             secretName: appsettings-secrets
