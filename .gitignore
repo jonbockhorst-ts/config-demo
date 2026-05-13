@@ -3,4 +3,5 @@ obj/
 .DS_Store
 .idea/
 .vscode/
+envs/*/charts/*.tgz
 
