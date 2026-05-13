@@ -13,7 +13,7 @@ var app = builder.Build();
 
 var startupSnapshot = BuildSnapshot(app.Configuration);
 app.Logger.LogInformation(
-    "Config summary: Topstep={Topstep}, TopstepReadOnly={TopstepReadOnly}, Chart={Chart}, Jwt={Jwt}, TemporalNamespace={TemporalNamespace}, TemporalApiKey={TemporalApiKey}, MarketDataApiBaseUrl={MarketDataApiBaseUrl}, MarketDataApiKey={MarketDataApiKey}, StrapiBaseUrl={StrapiBaseUrl}, StrapiToken={StrapiToken}, DefaultLogLevel={DefaultLogLevel}, AllowAnonymousRegistration={AllowAnonymousRegistration}, EnableHubspotEmails={EnableHubspotEmails}, ImmediateEnforcementThreshold={ImmediateEnforcementThreshold}",
+    "Config summary: Topstep={Topstep}, TopstepReadOnly={TopstepReadOnly}, Chart={Chart}, Jwt={Jwt}, TemporalNamespace={TemporalNamespace}, TemporalApiKey={TemporalApiKey}, MarketDataApiBaseUrl={MarketDataApiBaseUrl}, MarketDataApiKey={MarketDataApiKey}, StrapiBaseUrl={StrapiBaseUrl}, StrapiToken={StrapiToken}, StripeApiKey={StripeApiKey}, DefaultLogLevel={DefaultLogLevel}, AllowAnonymousRegistration={AllowAnonymousRegistration}, EnableHubspotEmails={EnableHubspotEmails}, ImmediateEnforcementThreshold={ImmediateEnforcementThreshold}",
     startupSnapshot.TopstepConnectionPresent ? "present" : "missing",
     startupSnapshot.TopstepReadOnlyConnectionPresent ? "present" : "missing",
     startupSnapshot.ChartConnectionPresent ? "present" : "missing",
@@ -24,6 +24,7 @@ app.Logger.LogInformation(
     startupSnapshot.MarketDataApiKeyPresent ? "present" : "missing",
     startupSnapshot.StrapiBaseUrl ?? "missing",
     startupSnapshot.StrapiTokenPresent ? "present" : "missing",
+    startupSnapshot.StripeApiKeyPresent ? "present" : "missing",
     startupSnapshot.DefaultLogLevel ?? "missing",
     startupSnapshot.AllowAnonymousRegistration,
     startupSnapshot.EnableHubspotEmails,
@@ -44,6 +45,7 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
     var temporalApiKey = configuration["Temporal:ApiKey"];
     var marketDataApiKey = configuration["MarketDataApi:ApiKey"];
     var strapiToken = configuration["Strapi:Token"];
+    var stripeApiKey = configuration["Stripe:ApiKey"];
 
     return new ConfigSnapshot(
         TopstepConnectionPresent: !string.IsNullOrWhiteSpace(topstepConnection),
@@ -60,6 +62,7 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
         MarketDataApiKeyPresent: !string.IsNullOrWhiteSpace(marketDataApiKey),
         StrapiBaseUrl: configuration["Strapi:BaseUrl"],
         StrapiTokenPresent: !string.IsNullOrWhiteSpace(strapiToken),
+        StripeApiKeyPresent: !string.IsNullOrWhiteSpace(stripeApiKey),
         DefaultLogLevel: configuration["Logging:LogLevel:Default"],
         AllowAnonymousRegistration: configuration.GetValue<bool?>("FeatureFlags:AllowAnonymousRegistration"),
         EnableHubspotEmails: configuration.GetValue<bool?>("FeatureFlags:EnableHubspotEmails"),
@@ -101,6 +104,7 @@ internal sealed record ConfigSnapshot(
     bool MarketDataApiKeyPresent,
     string? StrapiBaseUrl,
     bool StrapiTokenPresent,
+    bool StripeApiKeyPresent,
     string? DefaultLogLevel,
     bool? AllowAnonymousRegistration,
     bool? EnableHubspotEmails,

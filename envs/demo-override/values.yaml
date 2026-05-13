@@ -40,6 +40,8 @@ topstepx:
         remoteKey: api-marketdata-demo-override
       strapi:
         remoteKey: api-strapi-demo-override
+      stripe:
+        remoteKey: api-stripe-demo-override
     bindings:
       ConnectionStrings:
         Topstep:
@@ -64,3 +66,7 @@ topstepx:
         Token:
           source: strapi
           property: token
+      Stripe:
+        ApiKey:
+          source: stripe
+          property: apiKey

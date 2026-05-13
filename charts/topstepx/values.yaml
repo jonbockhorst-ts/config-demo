@@ -56,6 +56,8 @@ secrets:
       remoteKey: api-marketdata-demo
     strapi:
       remoteKey: api-strapi-demo
+    stripe:
+      remoteKey: api-stripe-demo
   bindings:
     ConnectionStrings:
       Topstep:
@@ -86,3 +88,7 @@ secrets:
       Token:
         source: strapi
         property: token
+    Stripe:
+      ApiKey:
+        source: stripe
+        property: apiKey
