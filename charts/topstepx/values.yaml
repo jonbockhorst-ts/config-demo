@@ -18,7 +18,7 @@ appsettings:
       Default: Information
   FeatureFlags:
     AllowAnonymousRegistration: false
-    EnableHubspotEmails: false
+    EnableHubspotEmails: true
     ClearAllSessionsOnSsoLogin: false
   Demo:
     EnvironmentName: shared-dev-default
