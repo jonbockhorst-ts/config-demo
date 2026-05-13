@@ -10,6 +10,8 @@ topstepx:
     pullPolicy: Never
 
   appsettings:
+    FeatureFlags:
+      EnableHubspotEmails: false
     Demo:
       EnvironmentName: demo-override
     HedgeDetection:
