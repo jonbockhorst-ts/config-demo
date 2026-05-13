@@ -1,0 +1,45 @@
+nameOverride: demo-app
+
+config:
+  secretStoreName: kubernetes-seed
+
+image:
+  repository: eso-config-demo
+  tag: local
+  pullPolicy: Never
+
+service:
+  port: 80
+  targetPort: 8080
+
+appsettings:
+  logging:
+    defaultLevel: Information
+  demo:
+    environmentName: demo
+    secretSource: eso-kubernetes-provider
+  dependencies:
+    marketDataBaseUrl: https://marketdata.demo.local
+  connectionStrings:
+    topStep:
+      database: topstep
+      maxPoolSize: 200
+      commandTimeout: 120
+      applicationName: demo
+    chart:
+      database: chart
+      commandTimeout: 30
+      applicationName: demo-chart
+
+secrets:
+  refreshInterval: 5m
+  store:
+    remoteNamespace: eso-seed
+    tokenSecretName: eso-kubernetes-store-token
+    tokenSecretKey: token
+  postgres:
+    remoteKey: databases-postgres-demo
+  jwt:
+    remoteKey: auth-jwt-demo
+  questdb:
+    remoteKey: databases-questdb-demo

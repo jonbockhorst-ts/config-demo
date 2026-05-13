@@ -1,0 +1,10 @@
+apiVersion: v2
+name: demo
+description: Demo environment chart modeled after the shared topstepx named-env flow
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: topstepx
+    alias: topstepx
+    version: 0.1.0
+    repository: file://../../charts/topstepx
