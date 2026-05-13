@@ -25,48 +25,30 @@ topstepx:
       remoteNamespace: eso-seed
       tokenSecretName: eso-kubernetes-store-token
       tokenSecretKey: token
-    sources:
-      topstep:
+    ConnectionStrings:
+      Topstep:
         remoteKey: databases-postgres-demo-override
-      topstepReadOnly:
+        database: demo_override
+      TopstepReadOnly:
         remoteKey: databases-postgres-demo-override-readonly
-      chart:
+        database: demo_override
+      Chart:
         remoteKey: databases-chart-demo-override
-      jwt:
-        remoteKey: auth-jwt-demo-override
-      temporal:
-        remoteKey: temporal-demo-override
-      marketDataApi:
-        remoteKey: api-marketdata-demo-override
-      strapi:
-        remoteKey: api-strapi-demo-override
-      stripe:
-        remoteKey: api-stripe-demo-override
-    bindings:
-      ConnectionStrings:
-        Topstep:
-          database: demo_override
-        TopstepReadOnly:
-          database: demo_override
-        Chart:
-          database: cqg-contract-bars-demo-override
-      Jwt:
-        Secret:
-          source: jwt
-          property: secret
-      Temporal:
-        ApiKey:
-          source: temporal
-          property: apiKey
-      MarketDataApi:
-        ApiKey:
-          source: marketDataApi
-          property: apiKey
-      Strapi:
-        Token:
-          source: strapi
-          property: token
-      Stripe:
-        ApiKey:
-          source: stripe
-          property: apiKey
+        database: cqg-contract-bars-demo-override
+    Jwt:
+      remoteKey: auth-jwt-demo-override
+      Secret: { property: secret }
+    Temporal:
+      remoteKey: temporal-demo-override
+      ApiKey: { property: apiKey }
+    MarketDataApi:
+      remoteKey: api-marketdata-demo-override
+      ApiKey: { property: apiKey }
+    Strapi:
+      remoteKey: api-strapi-demo-override
+      Token: { property: token }
+    Stripe:
+      remoteKey: api-stripe-demo-override
+      ApiKey: { property: apiKey }
+    ElasticSearch:
+      remoteKey: elasticsearch-demo-override

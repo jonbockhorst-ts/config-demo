@@ -19,48 +19,30 @@ topstepx:
       remoteNamespace: eso-seed
       tokenSecretName: eso-kubernetes-store-token
       tokenSecretKey: token
-    sources:
-      topstep:
+    ConnectionStrings:
+      Topstep:
         remoteKey: databases-postgres-demo
-      topstepReadOnly:
+        database: demo
+      TopstepReadOnly:
         remoteKey: databases-postgres-demo-readonly
-      chart:
+        database: demo
+      Chart:
         remoteKey: databases-chart-demo
-      jwt:
-        remoteKey: auth-jwt-demo
-      temporal:
-        remoteKey: temporal-demo
-      marketDataApi:
-        remoteKey: api-marketdata-demo
-      strapi:
-        remoteKey: api-strapi-demo
-      stripe:
-        remoteKey: api-stripe-demo
-    bindings:
-      ConnectionStrings:
-        Topstep:
-          database: demo
-        TopstepReadOnly:
-          database: demo
-        Chart:
-          database: cqg-contract-bars-demo
-      Jwt:
-        Secret:
-          source: jwt
-          property: secret
-      Temporal:
-        ApiKey:
-          source: temporal
-          property: apiKey
-      MarketDataApi:
-        ApiKey:
-          source: marketDataApi
-          property: apiKey
-      Strapi:
-        Token:
-          source: strapi
-          property: token
-      Stripe:
-        ApiKey:
-          source: stripe
-          property: apiKey
+        database: cqg-contract-bars-demo
+    Jwt:
+      remoteKey: auth-jwt-demo
+      Secret: { property: secret }
+    Temporal:
+      remoteKey: temporal-demo
+      ApiKey: { property: apiKey }
+    MarketDataApi:
+      remoteKey: api-marketdata-demo
+      ApiKey: { property: apiKey }
+    Strapi:
+      remoteKey: api-strapi-demo
+      Token: { property: token }
+    Stripe:
+      remoteKey: api-stripe-demo
+      ApiKey: { property: apiKey }
+    ElasticSearch:
+      remoteKey: elasticsearch-demo

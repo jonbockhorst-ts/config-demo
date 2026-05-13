@@ -62,8 +62,7 @@ In the real AWS-backed implementation these would become resource-shaped AWS SM 
 - there are no `useAppsettings*` feature flags in the chart API
 - values naming:
   - `appsettings`: non-secret config rendered into `appsettings.global.json`
-  - `secrets.sources`: resource-shaped secret sources, which align with the "secret per service/resource" goal
-  - `secrets.bindings`: app-facing secret fields and connection-string composition rules
+  - `secrets`: app-facing secret config, with each field carrying its own `remoteKey` and any composition inputs it needs
 
 ## Prerequisites
 
@@ -120,6 +119,10 @@ appsettings:
     EventHubUrl: http://webapi.marketdata.svc.cluster.local/hubs/event
   Strapi:
     BaseUrl: https://strapi-cms.topstep.com/api/
+  ElasticSearch:
+    Url: https://topstepx.es.us-east-2.aws.elastic-cloud.com/
+    Username: elastic
+    CloudId: topstepx-demo:ZXMtdXM...==
 ```
 
 Both demo environments inherit those values unless they explicitly override them. This mirrors the real TopstepX shape where a section like `Temporal` has both non-secret and secret siblings:
@@ -127,7 +130,16 @@ Both demo environments inherit those values unless they explicitly override them
 - `appsettings.Temporal.Address`
 - `appsettings.Temporal.Namespace`
 - `appsettings.Temporal.TaskQueues`
-- `secrets.bindings.Temporal.ApiKey`
+- `secrets.Temporal.ApiKey`
+
+and a section like `ElasticSearch` can share one secret source for multiple secret leaves:
+
+- `appsettings.ElasticSearch.Url`
+- `appsettings.ElasticSearch.Username`
+- `appsettings.ElasticSearch.CloudId`
+- `secrets.ElasticSearch.remoteKey`
+- `secrets.ElasticSearch.Password.property`
+- `secrets.ElasticSearch.CloudApiKey.property`
 
 The `demo` environment does not set `HedgeDetection.ImmediateEnforcementThreshold` in Helm values, so the app keeps the base value `8`.
 
@@ -145,31 +157,30 @@ The shared chart renders `appsettings` directly to `appsettings.global.json`, so
 - env override: `demo-override` -> `12`
 - shared dev global defaults: both envs inherit the same `FeatureFlags` section from the shared chart values
 
-The shared chart also shows a realistic secret-per-resource shape:
+The shared chart also shows a realistic app-facing secret shape:
 
 ```yaml
 secrets:
-  sources:
-    topstep:
+  ConnectionStrings:
+    Topstep:
       remoteKey: /databases/postgres/dev
-    temporal:
-      remoteKey: /temporal/dev
-    marketDataApi:
-      remoteKey: /apis/marketdata/dev
-  bindings:
-    ConnectionStrings:
-      Topstep:
-        source: topstep
-        database: dev
-        includeErrorDetail: true
-    Temporal:
-      ApiKey:
-        source: temporal
-        property: apiKey
-    MarketDataApi:
-      ApiKey:
-        source: marketDataApi
-        property: apiKey
+      database: dev
+      includeErrorDetail: true
+  Jwt:
+    remoteKey: /auth/jwt/dev
+    Secret: { property: secret }
+  Temporal:
+    remoteKey: /temporal/dev
+    ApiKey: { property: apiKey }
+  MarketDataApi:
+    remoteKey: /apis/marketdata/dev
+    ApiKey: { property: apiKey }
+  ElasticSearch:
+    remoteKey: /elasticsearch/topstepx
+    Password:
+      property: password
+    CloudApiKey:
+      property: cloudApiKey
 ```
 
 In the local demo, those `remoteKey` values point to Kubernetes Secrets in `eso-seed`, but the structure is meant to map directly to AWS Secrets Manager later.

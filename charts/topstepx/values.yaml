@@ -29,6 +29,10 @@ appsettings:
     BaseUrl: http://webapi.marketdata.svc.cluster.local
     EventHubUrl: http://webapi.marketdata.svc.cluster.local/hubs/event
     BackAdjustHistoricalBars: true
+  ElasticSearch:
+    Url: https://elastic.local/
+    Username: elastic
+    CloudId: topstepx-demo:ZXMtdXM...==
   Temporal:
     Address: topstepx-dev.tmprl.cloud:7233
     Namespace: topstepx-dev
@@ -41,54 +45,37 @@ secrets:
     remoteNamespace: eso-seed
     tokenSecretName: eso-kubernetes-store-token
     tokenSecretKey: token
-  sources:
-    topstep:
+  ConnectionStrings:
+    Topstep:
       remoteKey: databases-postgres-demo
-    topstepReadOnly:
+      database: dev
+      includeErrorDetail: true
+    TopstepReadOnly:
       remoteKey: databases-postgres-demo-readonly
-    chart:
+      database: dev
+      includeErrorDetail: true
+    Chart:
       remoteKey: databases-chart-demo
-    jwt:
-      remoteKey: auth-jwt-demo
-    temporal:
-      remoteKey: temporal-demo
-    marketDataApi:
-      remoteKey: api-marketdata-demo
-    strapi:
-      remoteKey: api-strapi-demo
-    stripe:
-      remoteKey: api-stripe-demo
-  bindings:
-    ConnectionStrings:
-      Topstep:
-        source: topstep
-        database: dev
-        includeErrorDetail: true
-      TopstepReadOnly:
-        source: topstepReadOnly
-        database: dev
-        includeErrorDetail: true
-      Chart:
-        source: chart
-        database: cqg-contract-bars
-        commandTimeout: 900
-    Jwt:
-      Secret:
-        source: jwt
-        property: secret
-    Temporal:
-      ApiKey:
-        source: temporal
-        property: apiKey
-    MarketDataApi:
-      ApiKey:
-        source: marketDataApi
-        property: apiKey
-    Strapi:
-      Token:
-        source: strapi
-        property: token
-    Stripe:
-      ApiKey:
-        source: stripe
-        property: apiKey
+      database: cqg-contract-bars
+      commandTimeout: 900
+  Jwt:
+    remoteKey: auth-jwt-demo
+    Secret: { property: secret }
+  Temporal:
+    remoteKey: temporal-demo
+    ApiKey: { property: apiKey }
+  MarketDataApi:
+    remoteKey: api-marketdata-demo
+    ApiKey: { property: apiKey }
+  Strapi:
+    remoteKey: api-strapi-demo
+    Token: { property: token }
+  Stripe:
+    remoteKey: api-stripe-demo
+    ApiKey: { property: apiKey }
+  ElasticSearch:
+    remoteKey: elasticsearch-demo
+    Password:
+      property: password
+    CloudApiKey:
+      property: cloudApiKey

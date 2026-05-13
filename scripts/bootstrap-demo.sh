@@ -105,6 +105,16 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
+  name: elasticsearch-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  password: elasticsearch-demo-password
+  cloudApiKey: elasticsearch-demo-cloud-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
   name: databases-postgres-demo-override
   namespace: eso-seed
 type: Opaque
@@ -182,6 +192,16 @@ metadata:
 type: Opaque
 stringData:
   apiKey: stripe-demo-override-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elasticsearch-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  password: elasticsearch-demo-override-password
+  cloudApiKey: elasticsearch-demo-override-cloud-api-key
 ---
 apiVersion: v1
 kind: ServiceAccount
