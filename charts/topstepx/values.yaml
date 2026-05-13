@@ -23,6 +23,13 @@ appsettings:
   Demo:
     EnvironmentName: shared-dev-default
     SecretSource: eso-kubernetes-provider
+  ConnectionStrings:
+    Topstep:
+      IncludeErrorDetail: true
+    TopstepReadOnly:
+      IncludeErrorDetail: true
+    Chart:
+      CommandTimeout: 900
   Strapi:
     BaseUrl: https://strapi-cms.topstep.com/api/
   MarketDataApi:
@@ -49,15 +56,12 @@ secrets:
     Topstep:
       remoteKey: databases-postgres-demo
       database: dev
-      includeErrorDetail: true
     TopstepReadOnly:
       remoteKey: databases-postgres-demo-readonly
       database: dev
-      includeErrorDetail: true
     Chart:
       remoteKey: databases-chart-demo
       database: cqg-contract-bars
-      commandTimeout: 900
   Jwt:
     remoteKey: auth-jwt-demo
     Secret: { property: secret }

@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +11,22 @@ builder.Configuration
     .AddJsonFile("secrets/appsettings.secrets.json", optional: true)
     .AddEnvironmentVariables();
 
+foreach (var name in new[] { "Topstep", "TopstepReadOnly", "Chart" })
+{
+    builder.Services.AddOptions<NpgsqlConnectionStringBuilder>(name)
+        .Bind(builder.Configuration.GetSection($"ConnectionStrings:{name}"))
+        .Validate(b => !string.IsNullOrWhiteSpace(b.Host), $"ConnectionStrings:{name}:Host is required")
+        .Validate(b => !string.IsNullOrWhiteSpace(b.Username), $"ConnectionStrings:{name}:Username is required")
+        .Validate(b => !string.IsNullOrWhiteSpace(b.Password), $"ConnectionStrings:{name}:Password is required")
+        .Validate(b => !string.IsNullOrWhiteSpace(b.Database), $"ConnectionStrings:{name}:Database is required")
+        .ValidateOnStart();
+}
+
 var app = builder.Build();
 
-var startupSnapshot = BuildSnapshot(app.Configuration);
+var connections = app.Services.GetRequiredService<IOptionsMonitor<NpgsqlConnectionStringBuilder>>();
+
+var startupSnapshot = BuildSnapshot(app.Configuration, connections);
 app.Logger.LogInformation(
     "Config summary: Topstep={Topstep}, TopstepReadOnly={TopstepReadOnly}, Chart={Chart}, Jwt={Jwt}, TemporalNamespace={TemporalNamespace}, TemporalApiKey={TemporalApiKey}, MarketDataApiBaseUrl={MarketDataApiBaseUrl}, MarketDataApiKey={MarketDataApiKey}, StrapiBaseUrl={StrapiBaseUrl}, StrapiToken={StrapiToken}, StripeApiKey={StripeApiKey}, ElasticSearchUrl={ElasticSearchUrl}, ElasticSearchPassword={ElasticSearchPassword}, ElasticSearchCloudApiKey={ElasticSearchCloudApiKey}, DefaultLogLevel={DefaultLogLevel}, AllowAnonymousRegistration={AllowAnonymousRegistration}, EnableHubspotEmails={EnableHubspotEmails}, ImmediateEnforcementThreshold={ImmediateEnforcementThreshold}",
     startupSnapshot.TopstepConnectionPresent ? "present" : "missing",
@@ -35,15 +50,16 @@ app.Logger.LogInformation(
 
 app.MapGet("/", () => Results.Redirect("/config-check"));
 app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
-app.MapGet("/config-check", (IConfiguration configuration) => Results.Ok(BuildSnapshot(configuration)));
+app.MapGet("/config-check", (IConfiguration configuration, IOptionsMonitor<NpgsqlConnectionStringBuilder> connections) =>
+    Results.Ok(BuildSnapshot(configuration, connections)));
 
 app.Run();
 
-static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
+static ConfigSnapshot BuildSnapshot(IConfiguration configuration, IOptionsMonitor<NpgsqlConnectionStringBuilder> connections)
 {
-    var topstepConnection = configuration.GetConnectionString("Topstep");
-    var topstepReadOnlyConnection = configuration.GetConnectionString("TopstepReadOnly");
-    var chartConnection = configuration.GetConnectionString("Chart");
+    var topstep = connections.Get("Topstep");
+    var topstepReadOnly = connections.Get("TopstepReadOnly");
+    var chart = connections.Get("Chart");
     var jwtSecret = configuration["Jwt:Secret"];
     var temporalApiKey = configuration["Temporal:ApiKey"];
     var marketDataApiKey = configuration["MarketDataApi:ApiKey"];
@@ -53,12 +69,12 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
     var elasticSearchCloudApiKey = configuration["ElasticSearch:CloudApiKey"];
 
     return new ConfigSnapshot(
-        TopstepConnectionPresent: !string.IsNullOrWhiteSpace(topstepConnection),
-        TopstepConnectionPreview: MaskConnectionString(topstepConnection),
-        TopstepReadOnlyConnectionPresent: !string.IsNullOrWhiteSpace(topstepReadOnlyConnection),
-        TopstepReadOnlyConnectionPreview: MaskConnectionString(topstepReadOnlyConnection),
-        ChartConnectionPresent: !string.IsNullOrWhiteSpace(chartConnection),
-        ChartConnectionPreview: MaskConnectionString(chartConnection),
+        TopstepConnectionPresent: !string.IsNullOrWhiteSpace(topstep.Host),
+        TopstepConnectionPreview: MaskConnectionString(topstep),
+        TopstepReadOnlyConnectionPresent: !string.IsNullOrWhiteSpace(topstepReadOnly.Host),
+        TopstepReadOnlyConnectionPreview: MaskConnectionString(topstepReadOnly),
+        ChartConnectionPresent: !string.IsNullOrWhiteSpace(chart.Host),
+        ChartConnectionPreview: MaskConnectionString(chart),
         JwtSecretPresent: !string.IsNullOrWhiteSpace(jwtSecret),
         TemporalApiKeyPresent: !string.IsNullOrWhiteSpace(temporalApiKey),
         TemporalNamespace: configuration["Temporal:Namespace"],
@@ -79,22 +95,15 @@ static ConfigSnapshot BuildSnapshot(IConfiguration configuration)
         SecretSource: configuration["Demo:SecretSource"]);
 }
 
-static string? MaskConnectionString(string? connectionString)
+static string? MaskConnectionString(NpgsqlConnectionStringBuilder builder)
 {
-    if (string.IsNullOrWhiteSpace(connectionString))
+    if (string.IsNullOrWhiteSpace(builder.Host))
         return null;
 
-    var segments = connectionString
-        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Select(segment =>
-        {
-            if (segment.StartsWith("Password=", StringComparison.OrdinalIgnoreCase))
-                return "Password=***";
-
-            return segment;
-        });
-
-    return string.Join(';', segments);
+    var masked = new NpgsqlConnectionStringBuilder(builder.ConnectionString);
+    if (!string.IsNullOrWhiteSpace(masked.Password))
+        masked.Password = "***";
+    return masked.ConnectionString;
 }
 
 internal sealed record ConfigSnapshot(

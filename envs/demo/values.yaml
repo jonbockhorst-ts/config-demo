@@ -12,7 +12,7 @@ topstepx:
   appsettings:
     Demo:
       EnvironmentName: demo
- 
+
   secrets:
     refreshInterval: 1m
     store:
