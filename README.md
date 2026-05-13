@@ -2,7 +2,7 @@
 
 Prototype for TSX-924. Four branches explore variants of the same flow:
 
-`GitHub -> Argo CD -> Helm -> ConfigMap + ExternalSecret -> Kubernetes Secret -> mounted files -> .NET app`
+`GitHub -> Argo CD -> Helm -> optional ConfigMap + ExternalSecret -> Kubernetes Secret -> mounted files -> .NET app`
 
 Every variant produces the same Kubernetes outputs: a `ConfigMap` for
 non-secret config and an ESO-managed `Secret` for resolved secrets. The app
@@ -13,16 +13,17 @@ apply to the production charts.
 
 ## Consistent across branches
 
-- Non-secret per-env config lives in Git. Helm renders it into `appsettings.global.json`.
-- External Secrets Operator resolves sensitive material into `appsettings.secrets.json`.
+- Non-secret per-env config lives in Git. Helm renders it into `appsettings.global.json` when `config.useConfigMap=true`.
+- External Secrets Operator resolves sensitive material into individual secret-backed files under `/app/secrets`.
 - The app doesn't call AWS Secrets Manager directly.
-- Mount paths are fixed: `/app/appsettings.global.json` and `/app/secrets/appsettings.secrets.json`. No env-suffixed filenames.
-- No `useAppsettings*` chart flags.
+- Mount paths are fixed: `/app/appsettings.global.json` and `/app/secrets`. No env-suffixed filenames.
+- `config.useConfigMap` is available as a temporary rollout toggle.
+- Shared chart defaults now express `remoteKey` values as AWS-style secret paths. Local-only env charts adapt those paths to the Kubernetes-provider seed data used by the demo bootstrap.
 - Resource-shaped Secrets Manager secrets (`/databases/postgres/dev`, `/auth/jwt/dev`, …). Multiple bindings can share one source.
 - Runtime config layering:
   1. `/app/appsettings.json` — per-service base, baked into the image
-  2. `/app/appsettings.global.json` — Helm-rendered ConfigMap
-  3. `/app/secrets/appsettings.secrets.json` — ESO-managed Secret
+  2. `/app/appsettings.global.json` — Helm-rendered ConfigMap when enabled
+  3. `/app/secrets/*` — ESO-managed Secret entries loaded with .NET `AddKeyPerFile`
   4. environment variables
 
 Sections like `Temporal`, `MarketDataApi`, and `ElasticSearch` mix non-secret
@@ -42,17 +43,17 @@ fields (`Address`, `BaseUrl`, `Url`) with secret fields (`ApiKey`, `Token`,
 
 ### `main` — enumerated schema
 
-The external secret template hand-writes the `appsettings.secrets.json` JSON
-literal and the `data:` block. Helm composes `ConnectionStrings.*`
+The external secret template hand-writes the secret-backed config keys and
+the `data:` block. Helm composes `ConnectionStrings.*`
 (`Username={{ .topstepUsername }};…;Database=dev;…`). Scalar bindings
 hardcode their source-prefix names (`{{ .jwtSecret }}`,
 `{{ .temporalApiKey }}`). The `secrets` values tree mirrors the .NET section
-layout and carries `remoteKey` plus per-binding parameters.
+layout and carries templated `remoteKey` values plus per-binding parameters.
 
 - **Pros:** Reads top-to-bottom. The JSON literal *is* the schema, so env
   values can't add a binding the app would read.
-- **Cons:** Adding a binding edits two parallel blocks (the JSON literal and
-  the `data:` list) that can drift inside the chart. Postgres
+- **Cons:** Adding a binding edits two parallel blocks (the templated secret
+  entries and the `data:` list) that can drift inside the chart. Postgres
   connection-string syntax lives in Helm.
 
 ### `chart-template` — schema in values
@@ -124,8 +125,8 @@ Two decisions, mostly independent:
 
 - `app/` — minimal ASP.NET app
 - `charts/topstepx/` — shared chart, modeled after the real shared `topstepx` chart in Argo
-- `envs/demo/` — environment chart that uses the app default for one setting
-- `envs/demo-override/` — environment chart that overrides that same setting
+- `envs/demo/` — production-shaped environment chart with AWS-style secret paths
+- `envs/demo-override/` — production-shaped override environment chart with AWS-style secret paths
 - `apps/*.yaml` — Argo `Application` manifests for both demo environments
 - `scripts/` — local bootstrap helpers for `k3d`/`k3s`, Argo CD, ESO, and seed secrets
 
@@ -159,21 +160,24 @@ After bootstrap:
 - the base demo app runs in `demo`
 - the override demo app runs in `demo-override`
 
-To compare branches, check out a different branch and let Argo CD resync.
-The app-side mount paths and loading order don't change, so the same checks
-work across all four.
+The bootstrap keeps the env charts production-shaped and injects a
+demo-only Helm values overlay into the Argo `Application` resources so the
+Kubernetes provider still reads seeded local Secret names.
 
 ### Local secret source
 
 The local prototype uses ESO's Kubernetes provider instead of AWS Secrets
 Manager. `bootstrap-demo.sh` seeds Kubernetes Secrets into the `eso-seed`
 namespace. The chart's `SecretStore` lets ESO read those and generate the
-application-facing `appsettings.secrets.json` in each app namespace.
+application-facing key-per-file secret entries in each app namespace.
 
-Local `remoteKey` values point at Kubernetes Secret names
-(`databases-postgres-demo`, `auth-jwt-demo`, …). In the AWS-backed
-implementation they become resource-shaped AWS Secrets Manager paths
-(`/databases/postgres/demo`, `/auth/jwt/demo`, …).
+In the AWS-backed implementation, `remoteKey` values are resource-shaped
+Secrets Manager paths such as
+`/databases/postgres/{{ .Values.config.secretsEnv }}` and
+`/auth/jwt/{{ .Values.config.secretsEnv }}`. For the local Kubernetes
+provider, the bootstrap injects a demo-only Helm values override so Argo
+renders seeded Secret names such as `databases-postgres-demo` and
+`auth-jwt-demo` without changing the env charts themselves.
 
 ### Verify the deployment
 
@@ -181,7 +185,8 @@ implementation they become resource-shaped AWS Secrets Manager paths
 kubectl --context k3d-eso-config-demo get applications -n argocd
 kubectl --context k3d-eso-config-demo get externalsecret -n demo
 kubectl --context k3d-eso-config-demo get externalsecret -n demo-override
-kubectl --context k3d-eso-config-demo get secret appsettings-secrets -n demo -o jsonpath='{.data.appsettings\.secrets\.json}' | base64 -d
+kubectl --context k3d-eso-config-demo get secret appsettings-secrets -n demo -o jsonpath='{.data.ConnectionStrings__Topstep}' | base64 -d
+kubectl --context k3d-eso-config-demo get secret appsettings-secrets -n demo -o jsonpath='{.data.Temporal__ApiKey}' | base64 -d
 kubectl --context k3d-eso-config-demo get configmap appsettings-global -n demo -o jsonpath='{.data.appsettings\.global\.json}'
 kubectl --context k3d-eso-config-demo get configmap appsettings-global -n demo-override -o jsonpath='{.data.appsettings\.global\.json}'
 kubectl --context k3d-eso-config-demo logs deploy/demo-app -n demo
@@ -190,7 +195,7 @@ kubectl --context k3d-eso-config-demo logs deploy/demo-app -n demo-override
 
 ## Realistic split example
 
-How a section's non-secret and secret fields divide across the two files.
+How a section's non-secret and secret fields divide across the two sources.
 The YAML below uses `main`'s authoring shape — the other branches reach the
 same result differently.
 
@@ -243,6 +248,13 @@ section like `Temporal` has non-secret and secret siblings:
 - `secrets.ElasticSearch.Password.property`
 - `secrets.ElasticSearch.CloudApiKey.property`
 
+At runtime those secret leaves appear as key-per-file entries such as:
+
+- `ElasticSearch__Password`
+- `ElasticSearch__CloudApiKey`
+- `Temporal__ApiKey`
+- `ConnectionStrings__Topstep`
+
 `demo` keeps the app default for
 `HedgeDetection.ImmediateEnforcementThreshold` (`8`). `demo-override` sets
 it to `12` in
@@ -289,3 +301,29 @@ secrets:
 In the local demo, those `remoteKey` values point at Kubernetes Secrets in
 `eso-seed`. In the AWS-backed implementation they map directly to AWS
 Secrets Manager.
+
+A minimal env override only needs to carry the fields that truly vary by
+environment. In this prototype that mostly means `config.secretsEnv`,
+non-secret `appsettings` overrides, and the database names:
+
+```yaml
+topstepx:
+  config:
+    secretsEnv: demo-override
+
+  appsettings:
+    Demo:
+      EnvironmentName: demo-override
+
+  secrets:
+    ConnectionStrings:
+      Topstep:
+        database: demo_override
+      TopstepReadOnly:
+        database: demo_override
+      Chart:
+        database: cqg-contract-bars-demo-override
+```
+
+The rest of the secret contract stays in the shared chart:
+`remoteKey` templates, property names, ESO store wiring, and refresh policy.

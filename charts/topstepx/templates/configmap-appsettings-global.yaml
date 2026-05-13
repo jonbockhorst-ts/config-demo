@@ -1,3 +1,4 @@
+{{- if .Values.config.useConfigMap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,3 +8,4 @@ metadata:
 data:
   appsettings.global.json: |-
 {{ .Values.appsettings | toPrettyJson | nindent 4 }}
+{{- end }}

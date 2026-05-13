@@ -2,6 +2,8 @@ nameOverride: demo-app
 
 config:
   secretStoreName: kubernetes-seed
+  secretsEnv: demo
+  useConfigMap: true
 
 image:
   repository: eso-config-demo
@@ -47,34 +49,34 @@ secrets:
     tokenSecretKey: token
   ConnectionStrings:
     Topstep:
-      remoteKey: databases-postgres-demo
+      remoteKey: /databases/postgres/{{ .Values.config.secretsEnv }}
       database: dev
       includeErrorDetail: true
     TopstepReadOnly:
-      remoteKey: databases-postgres-demo-readonly
+      remoteKey: /databases/postgres/{{ .Values.config.secretsEnv }}/readonly
       database: dev
       includeErrorDetail: true
     Chart:
-      remoteKey: databases-chart-demo
+      remoteKey: /databases/chart/{{ .Values.config.secretsEnv }}
       database: cqg-contract-bars
       commandTimeout: 900
   Jwt:
-    remoteKey: auth-jwt-demo
+    remoteKey: /auth/jwt/{{ .Values.config.secretsEnv }}
     Secret: { property: secret }
   Temporal:
-    remoteKey: temporal-demo
+    remoteKey: /temporal/{{ .Values.config.secretsEnv }}
     ApiKey: { property: apiKey }
   MarketDataApi:
-    remoteKey: api-marketdata-demo
+    remoteKey: /apis/marketdata/{{ .Values.config.secretsEnv }}
     ApiKey: { property: apiKey }
   Strapi:
-    remoteKey: api-strapi-demo
+    remoteKey: /apis/strapi/{{ .Values.config.secretsEnv }}
     Token: { property: token }
   Stripe:
-    remoteKey: api-stripe-demo
+    remoteKey: /apis/stripe/{{ .Values.config.secretsEnv }}
     ApiKey: { property: apiKey }
   ElasticSearch:
-    remoteKey: elasticsearch-demo
+    remoteKey: /elasticsearch/{{ .Values.config.secretsEnv }}
     Password:
       property: password
     CloudApiKey:

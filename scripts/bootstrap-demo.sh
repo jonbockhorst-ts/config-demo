@@ -249,8 +249,62 @@ kubectl --context "${KUBE_CONTEXT}" -n demo-override create secret generic eso-k
   --dry-run=client \
   -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
 
-sed "s|REPO_URL_PLACEHOLDER|${REPO_URL}|g" "${ROOT_DIR}/apps/demo.yaml" | kubectl --context "${KUBE_CONTEXT}" apply -f -
-sed "s|REPO_URL_PLACEHOLDER|${REPO_URL}|g" "${ROOT_DIR}/apps/demo-override.yaml" | kubectl --context "${KUBE_CONTEXT}" apply -f -
+apply_demo_application() {
+  local app_name="$1"
+  local app_path="$2"
+  local app_namespace="$3"
+
+  cat <<EOF | kubectl --context "${KUBE_CONTEXT}" apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${app_name}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: ${REPO_URL}
+    targetRevision: main
+    path: ${app_path}
+    helm:
+      values: |
+        topstepx:
+          secrets:
+            ConnectionStrings:
+              Topstep:
+                remoteKey: databases-postgres-{{ .Values.config.secretsEnv }}
+              TopstepReadOnly:
+                remoteKey: databases-postgres-{{ .Values.config.secretsEnv }}-readonly
+              Chart:
+                remoteKey: databases-chart-{{ .Values.config.secretsEnv }}
+            Jwt:
+              remoteKey: auth-jwt-{{ .Values.config.secretsEnv }}
+            Temporal:
+              remoteKey: temporal-{{ .Values.config.secretsEnv }}
+            MarketDataApi:
+              remoteKey: api-marketdata-{{ .Values.config.secretsEnv }}
+            Strapi:
+              remoteKey: api-strapi-{{ .Values.config.secretsEnv }}
+            Stripe:
+              remoteKey: api-stripe-{{ .Values.config.secretsEnv }}
+            ElasticSearch:
+              remoteKey: elasticsearch-{{ .Values.config.secretsEnv }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${app_namespace}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+EOF
+}
+
+apply_demo_application "demo" "envs/demo" "demo"
+apply_demo_application "demo-override" "envs/demo-override" "demo-override"
 
 echo
 echo "Bootstrap submitted."
