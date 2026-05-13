@@ -13,23 +13,27 @@ service:
   targetPort: 8080
 
 appsettings:
-  logging:
-    defaultLevel: Information
-  demo:
-    environmentName: demo
-    secretSource: eso-kubernetes-provider
-  dependencies:
-    marketDataBaseUrl: https://marketdata.demo.local
-  connectionStrings:
-    topStep:
-      database: topstep
-      maxPoolSize: 200
-      commandTimeout: 120
-      applicationName: demo
-    chart:
-      database: chart
-      commandTimeout: 30
-      applicationName: demo-chart
+  Logging:
+    LogLevel:
+      Default: Information
+  FeatureFlags:
+    AllowAnonymousRegistration: false
+    EnableHubspotEmails: false
+    ClearAllSessionsOnSsoLogin: false
+  Demo:
+    EnvironmentName: shared-dev-default
+    SecretSource: eso-kubernetes-provider
+  Strapi:
+    BaseUrl: https://strapi-cms.topstep.com/api/
+  MarketDataApi:
+    BaseUrl: http://webapi.marketdata.svc.cluster.local
+    EventHubUrl: http://webapi.marketdata.svc.cluster.local/hubs/event
+    BackAdjustHistoricalBars: true
+  Temporal:
+    Address: topstepx-dev.tmprl.cloud:7233
+    Namespace: topstepx-dev
+    TaskQueues:
+      - topstepx-temporal-worker-queue
 
 secrets:
   refreshInterval: 5m
@@ -37,9 +41,48 @@ secrets:
     remoteNamespace: eso-seed
     tokenSecretName: eso-kubernetes-store-token
     tokenSecretKey: token
-  postgres:
-    remoteKey: databases-postgres-demo
-  jwt:
-    remoteKey: auth-jwt-demo
-  questdb:
-    remoteKey: databases-questdb-demo
+  sources:
+    topstep:
+      remoteKey: databases-postgres-demo
+    topstepReadOnly:
+      remoteKey: databases-postgres-demo-readonly
+    chart:
+      remoteKey: databases-chart-demo
+    jwt:
+      remoteKey: auth-jwt-demo
+    temporal:
+      remoteKey: temporal-demo
+    marketDataApi:
+      remoteKey: api-marketdata-demo
+    strapi:
+      remoteKey: api-strapi-demo
+  bindings:
+    ConnectionStrings:
+      Topstep:
+        source: topstep
+        database: dev
+        includeErrorDetail: true
+      TopstepReadOnly:
+        source: topstepReadOnly
+        database: dev
+        includeErrorDetail: true
+      Chart:
+        source: chart
+        database: cqg-contract-bars
+        commandTimeout: 900
+    Jwt:
+      Secret:
+        source: jwt
+        property: secret
+    Temporal:
+      ApiKey:
+        source: temporal
+        property: apiKey
+    MarketDataApi:
+      ApiKey:
+        source: marketDataApi
+        property: apiKey
+    Strapi:
+      Token:
+        source: strapi
+        property: token

@@ -11,8 +11,12 @@ topstepx:
 
   appsettings:
     Demo:
-      EnvironmentName: demo
- 
+      EnvironmentName: demo-override
+    HedgeDetection:
+      ImmediateEnforcementThreshold: 12
+    Temporal:
+      Namespace: topstepx-dev-override
+
   secrets:
     refreshInterval: 1m
     store:
@@ -21,27 +25,27 @@ topstepx:
       tokenSecretKey: token
     sources:
       topstep:
-        remoteKey: databases-postgres-demo
+        remoteKey: databases-postgres-demo-override
       topstepReadOnly:
-        remoteKey: databases-postgres-demo-readonly
+        remoteKey: databases-postgres-demo-override-readonly
       chart:
-        remoteKey: databases-chart-demo
+        remoteKey: databases-chart-demo-override
       jwt:
-        remoteKey: auth-jwt-demo
+        remoteKey: auth-jwt-demo-override
       temporal:
-        remoteKey: temporal-demo
+        remoteKey: temporal-demo-override
       marketDataApi:
-        remoteKey: api-marketdata-demo
+        remoteKey: api-marketdata-demo-override
       strapi:
-        remoteKey: api-strapi-demo
+        remoteKey: api-strapi-demo-override
     bindings:
       ConnectionStrings:
         Topstep:
-          database: demo
+          database: demo_override
         TopstepReadOnly:
-          database: demo
+          database: demo_override
         Chart:
-          database: cqg-contract-bars-demo
+          database: cqg-contract-bars-demo-override
       Jwt:
         Secret:
           source: jwt

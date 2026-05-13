@@ -1,0 +1,10 @@
+apiVersion: v2
+name: demo-override
+description: Demo environment chart that overrides one app default through appsettings.global.json
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: topstepx
+    alias: topstepx
+    version: 0.1.0
+    repository: file://../../charts/topstepx

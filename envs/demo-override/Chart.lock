@@ -1,0 +1,6 @@
+dependencies:
+- name: topstepx
+  repository: file://../../charts/topstepx
+  version: 0.1.0
+digest: sha256:da85bb24ad447e73c5e8bbb665240b237852a965bc90e307a5740014ae015ca3
+generated: "2026-05-13T00:21:38.856064-05:00"

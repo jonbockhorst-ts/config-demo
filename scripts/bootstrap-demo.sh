@@ -18,6 +18,7 @@ fi
 
 kubectl --context "${KUBE_CONTEXT}" create namespace eso-seed --dry-run=client -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
 kubectl --context "${KUBE_CONTEXT}" create namespace demo --dry-run=client -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
+kubectl --context "${KUBE_CONTEXT}" create namespace demo-override --dry-run=client -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
 
 kubectl --context "${KUBE_CONTEXT}" apply -f - <<'EOF'
 apiVersion: v1
@@ -35,14 +36,26 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: databases-questdb-demo
+  name: databases-postgres-demo-readonly
   namespace: eso-seed
 type: Opaque
 stringData:
-  host: questdb.demo.internal
-  port: "8812"
-  username: admin
-  password: quest-secret-password
+  host: postgres-readonly.demo.internal
+  port: "5432"
+  username: readonly_user
+  password: readonly-secret-password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: databases-chart-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  host: postgres-chart.demo.internal
+  port: "5432"
+  username: chart_user
+  password: chart-secret-password
 ---
 apiVersion: v1
 kind: Secret
@@ -52,6 +65,105 @@ metadata:
 type: Opaque
 stringData:
   secret: demo-jwt-secret-value
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  apiKey: temporal-demo-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-marketdata-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  apiKey: marketdata-demo-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-strapi-demo
+  namespace: eso-seed
+type: Opaque
+stringData:
+  token: strapi-demo-token
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: databases-postgres-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  host: postgres.demo-override.internal
+  port: "5432"
+  username: app_user
+  password: super-secret-password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: databases-postgres-demo-override-readonly
+  namespace: eso-seed
+type: Opaque
+stringData:
+  host: postgres-readonly.demo-override.internal
+  port: "5432"
+  username: readonly_user
+  password: readonly-secret-password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: databases-chart-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  host: postgres-chart.demo-override.internal
+  port: "5432"
+  username: chart_user
+  password: chart-secret-password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-jwt-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  secret: demo-override-jwt-secret-value
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  apiKey: temporal-demo-override-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-marketdata-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  apiKey: marketdata-demo-override-api-key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-strapi-demo-override
+  namespace: eso-seed
+type: Opaque
+stringData:
+  token: strapi-demo-override-token
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -94,10 +206,17 @@ kubectl --context "${KUBE_CONTEXT}" -n demo create secret generic eso-kubernetes
   --dry-run=client \
   -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
 
+kubectl --context "${KUBE_CONTEXT}" -n demo-override create secret generic eso-kubernetes-store-token \
+  --from-literal=token="${TOKEN}" \
+  --dry-run=client \
+  -o yaml | kubectl --context "${KUBE_CONTEXT}" apply -f -
+
 sed "s|REPO_URL_PLACEHOLDER|${REPO_URL}|g" "${ROOT_DIR}/apps/demo.yaml" | kubectl --context "${KUBE_CONTEXT}" apply -f -
+sed "s|REPO_URL_PLACEHOLDER|${REPO_URL}|g" "${ROOT_DIR}/apps/demo-override.yaml" | kubectl --context "${KUBE_CONTEXT}" apply -f -
 
 echo
 echo "Bootstrap submitted."
 echo "Cluster context: ${KUBE_CONTEXT}"
 echo "Watch sync with: kubectl --context ${KUBE_CONTEXT} get applications -n argocd"
 echo "Check the app with: kubectl --context ${KUBE_CONTEXT} logs deploy/demo-app -n demo"
+echo "Check the override app with: kubectl --context ${KUBE_CONTEXT} logs deploy/demo-app -n demo-override"

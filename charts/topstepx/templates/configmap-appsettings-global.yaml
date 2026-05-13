@@ -6,17 +6,4 @@ metadata:
     {{- include "topstepx.labels" . | nindent 4 }}
 data:
   appsettings.global.json: |-
-    {
-      "Logging": {
-        "LogLevel": {
-          "Default": {{ .Values.appsettings.logging.defaultLevel | quote }}
-        }
-      },
-      "Demo": {
-        "EnvironmentName": {{ .Values.appsettings.demo.environmentName | quote }},
-        "SecretSource": {{ .Values.appsettings.demo.secretSource | quote }}
-      },
-      "Dependencies": {
-        "MarketDataBaseUrl": {{ .Values.appsettings.dependencies.marketDataBaseUrl | quote }}
-      }
-    }
+{{ .Values.appsettings | toPrettyJson | nindent 4 }}
